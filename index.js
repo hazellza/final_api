@@ -51,8 +51,8 @@ app.post('/users', (req, res) => {
 
 app.put('/users', (req, res) => {
     connection.query(
-        'UPDATE `users` SET `fname`=?, `lname`=?, `username`=?, `password`=?, `avatar`=? WHERE id =?',
-        [req.body.fname, req.body.lname, req.body.username, req.body.password, req.body.avatar, req.body.id],
+        'UPDATE `users` SET `fname`=?, `lname`=?, `username`=?, `password`=?, `phonenumber`=?, `avatar`=? WHERE id =?',
+        [req.body.fname, req.body.lname, req.body.username, req.body.password, req.body.phonenumber, req.body.avatar, req.body.id],
          function (err, results, fields) {
             res.send(results)
         }
@@ -68,6 +68,18 @@ app.delete('/users', (req, res) => {
         }
     )
 })
+
+app.post('/login', function (req, res, next) {
+  connection.query(
+    'SELECT * FROM `users` WHERE username = ? and password = ?',
+    [req.body.username, req.body.password],
+    function(err, results) {
+      res.json(results);
+    }
+  );
+})
+
+/////////////////// ATTRACTION API //////////////////
 
 app.listen(process.env.PORT || 3000, () => {
     console.log('CORS-enabled web server listening on port 3000')
