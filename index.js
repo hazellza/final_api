@@ -1,9 +1,8 @@
 const express = require('express')
 const cors = require('cors')
 const mysql = require('mysql2')
-const bodyParser = require('body-parser')
 require('dotenv').config()
-
+const app = express()
 
 
 app.use(cors())
@@ -36,8 +35,8 @@ app.get('/users/:id', (req, res) => {
 
 app.post('/users', (req, res) => {
     connection.query(
-        'INSERT INTO `users` (`fname`, `lname`, `username`, `password`, `avatar`) VALUES (?, ?, ?, ?, ?)',
-        [req.body.fname, req.body.lname, req.body.username, req.body.password, req.body.avatar],
+        'INSERT INTO `users` (`fname`, `lname`, `username`, `password`, `phonenumber`, `avatar`) VALUES (?, ?, ?, ?, ?)',
+        [req.body.fname, req.body.lname, req.body.username, req.body.password, req.body.phonenumber, req.body.avatar],
          function (err, results, fields) {
             if (err) {
                 console.error('Error in POST /users:', err);
