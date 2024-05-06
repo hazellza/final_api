@@ -113,7 +113,6 @@ app.post('/login', function (req, res) {
 
 app.get('/profile', function (req, res) {
     const token = req.headers.authorization;
-    console.log(token);
     // Check if token is provided
     if (!token) {
         return res.status(401).send('Unauthorized');
@@ -164,7 +163,11 @@ app.put('/users', (req, res) => {
         'UPDATE `users` SET `fname`=?, `lname`=?, `username`=?, `password`=?, `phonenumber`=?, `avatar`=? WHERE id =?',
         [req.body.fname, req.body.lname, req.body.username, req.body.password, req.body.phonenumber, req.body.avatar, req.body.id],
         function (err, results, fields) {
-            res.send(results)
+            if (err) {
+                res.status(500).send('Update failed: ' + err.message);
+            } else {
+                res.status(201).send('Update successful')
+            }
         }
     )
 })
@@ -191,6 +194,8 @@ app.get('/attractions', (req, res) => {
         }
     )
 })
+
+
 
 app.delete('/attractions', (req, res) => {
     connection.query(
@@ -220,6 +225,16 @@ app.get('/attractions/mountain', (req, res) => {
     )
 });
 
+app.get('/attractions/:id', (req, res) => {
+    const id = req.params.id;
+    connection.query(
+        'SELECT * FROM attractions WHERE id = ?', [id],
+        function (err, results, fields) {
+            res.send(results)
+        }
+    )
+})
+
 app.put('/attractions', (req, res) => {
     connection.query(
         'UPDATE `attractions` SET `name`=?, `detail`=?, `coverimage`=?, `address`=?, `type`=? WHERE id = ?',
@@ -228,7 +243,7 @@ app.put('/attractions', (req, res) => {
             if (err) {
                 res.status(500).send('Update failed: ' + err.message);
             } else {
-                res.status(200).send('Update successful' + results)
+                res.status(201).send('Update successful')
             }
         }
     )
