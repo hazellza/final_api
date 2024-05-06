@@ -4,10 +4,12 @@ const mysql = require('mysql2')
 const bcrypt = require('bcrypt')
 require('dotenv').config()
 const app = express()
+const jwt = require('jsonwebtoken');
 
 
 app.use(cors())
 app.use(express.json())
+const secretKey = 'mysecretkey';
 
 const connection = mysql.createConnection(process.env.DATABASE_URL)
 
@@ -91,8 +93,9 @@ app.post('/login', function (req, res) {
                             res.status(500).send('Error logging in');
                         } else {
                             if (result) {
-                                // Passwords match, login successful
-                                res.status(200).send('Login successful');
+                                const users = results[0];
+                                const token = jwt.sign({ id: users.id, username: users.username }, 'your-secret-key', { expiresIn: '1h' });
+                                res.status(200).json({ token });
                             } else {
                                 // Passwords don't match
                                 res.status(401).send('Login failed');
@@ -107,6 +110,52 @@ app.post('/login', function (req, res) {
         }
     );
 });
+
+app.get('/profile', function (req, res) {
+    const token = req.headers.authorization;
+    console.log(token);
+    // Check if token is provided
+    if (!token) {
+        return res.status(401).send('Unauthorized');
+    }
+    // Verify token
+    jwt.verify(token.split(' ')[1], 'your-secret-key', function (err, decoded) {
+        if (err) {
+            console.error('Error verifying token:', err);
+            return res.status(401).send('Unauthorized');
+        } else {
+            // Token is valid, get user data
+            connection.query(
+                'SELECT * FROM `users` WHERE id = ?',
+                [decoded.id],
+                function (err, results) {
+                    if (err) {
+                        console.error('Error getting user data:', err);
+                        return res.status(500).send('Error retrieving user data');
+                    } else {
+                        if (results.length > 0) {
+                            const userData = {
+                                fname: results[0].fname,
+                                lname: results[0].lname,
+                                username: results[0].username,
+                                phonenumber: results[0].phonenumber,
+                                avatar: results[0].avatar
+                            };
+                            return res.status(200).json(userData);
+                        } else {
+                            return res.status(404).send('User not found');
+                        }
+                    }
+                }
+            );
+        }
+    });
+});
+
+
+
+
+
 
 
 
@@ -133,6 +182,71 @@ app.delete('/users', (req, res) => {
 
 
 /////////////////// ATTRACTION API //////////////////
+
+app.get('/attractions', (req, res) => {
+    connection.query(
+        'SELECT * FROM attractions',
+        function (err, results, fields) {
+            res.send(results)
+        }
+    )
+})
+
+app.get('/attractions/beach', (req, res) => {
+    connection.query(
+        'SELECT * FROM `attractions` WHERE type = ?',['beach'],
+        function (err, results, fields) {
+            res.send(results)
+        }
+    )
+});
+
+app.get('/attractions/mountain', (req, res) => {
+    connection.query(
+        'SELECT * FROM `attractions` WHERE type = ?',['mountain'],
+        function (err, results, fields) {
+            res.send(results)
+        }
+    )
+});
+
+app.put('/attractions', (req, res) => {
+    connection.query(
+        'UPDATE `attractions` SET `name`=?, `detail`=?, `coverimage`=?, `address`=?, `type`=? WHERE id = ?',
+        [req.body.name, req.body.detail, req.body.coverimage, req.body.address, req.body.type, req.body.id],
+        function(err, results, fields) {
+            if (err) {
+                res.status(500).send('Update failed: ' + err.message);
+            } else {
+                res.status(200).send('Update successful' + results)
+            }
+        }
+    )
+})
+
+app.post('/attractions/create', (req, res) => {
+    const { name, detail, coverimage, address, type } = req.body;
+    
+    // ตรวจสอบว่าข้อมูลที่จำเป็นสำหรับการสร้างถูกส่งมาหรือไม่
+    if (!name || !detail || !coverimage || !address || !type) {
+        return res.status(400).json({ message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+    }
+
+    connection.query(
+        'INSERT INTO `attractions` (`name`, `detail`, `coverimage`, `address`, `type`) VALUES (?, ?, ?, ?, ?)',
+        [name, detail, coverimage, address, type],
+        function(err, results, fields) {
+            if (err) {
+                res.status(500).send('เกิดข้อผิดพลาดในการเพิ่มข้อมูล: ' + err.message);
+            } else {
+                res.status(201).json({ message: 'เพิ่มข้อมูลเรียบร้อยแล้ว', id: results.insertId });
+            }
+        }
+    );
+});
+
+
+
 
 app.listen(process.env.PORT || 3000, () => {
     console.log('CORS-enabled web server listening on port 3000')
