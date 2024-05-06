@@ -192,6 +192,16 @@ app.get('/attractions', (req, res) => {
     )
 })
 
+app.delete('/attractions', (req, res) => {
+    connection.query(
+        'DELETE FROM `attractions` WHERE id =?',
+        [req.body.id],
+        function (err, results, fields) {
+            res.send(results)
+        }
+    )
+})
+
 app.get('/attractions/beach', (req, res) => {
     connection.query(
         'SELECT * FROM `attractions` WHERE type = ?',['beach'],
