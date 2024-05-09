@@ -264,7 +264,7 @@ app.post('/attractions/create', (req, res) => {
             if (err) {
                 res.status(500).send('เกิดข้อผิดพลาดในการเพิ่มข้อมูล: ' + err.message);
             } else {
-                res.status(201).json({ message: 'เพิ่มข้อมูลเรียบร้อยแล้ว', id: results.insertId });
+                res.status(201).send('Create successful' + results);
             }
         }
     );
