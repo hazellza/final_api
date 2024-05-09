@@ -134,6 +134,7 @@ app.get('/profile', function (req, res) {
                     } else {
                         if (results.length > 0) {
                             const userData = {
+                                id : results[0].id,
                                 fname: results[0].fname,
                                 lname: results[0].lname,
                                 username: results[0].username,
